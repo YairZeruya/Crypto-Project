@@ -23,6 +23,12 @@ def macd(df, fast_period=12, slow_period=26, signal_period=9):
 class RSI_Strategy(Strategy):
     ema_period = 200
     rsi_period = 14
+    description = ("This strategy uses the Relative Strength Index (RSI) indicator. "
+                            "The RSI measures the magnitude of recent price changes to evaluate overbought or oversold conditions. "
+                            "This strategy buys when RSI is below 30 and sells when RSI is above 70.")
+
+    def _init_(self, *args, **kwargs):
+        super()._init_(*args, **kwargs)
 
     def init(self):
         price = self.data.Close
@@ -38,6 +44,12 @@ class RSI_Strategy(Strategy):
 # Define the EMA strategy
 class EMA_Strategy(Strategy):
     ema_period = 200
+    description = ("This strategy uses the Exponential Moving Average (EMA) indicator. "
+                            "The EMA gives more weight to recent prices, making it more responsive to new information. "
+                            "This strategy buys when the price is above the 200-period EMA and sells when the price is below the 200-period EMA.")
+
+    def _init_(self, *args, **kwargs):
+        super()._init_(*args, **kwargs)
 
     def init(self):
         price = self.data.Close
@@ -55,6 +67,12 @@ class MACD_Strategy(Strategy):
     macd_fast_period = 12
     macd_slow_period = 26
     macd_signal_period = 9
+    description = ("This strategy uses the Moving Average Convergence Divergence (MACD) indicator. "
+                            "The MACD is a trend-following momentum indicator that shows the relationship between two moving averages of a security’s price. "
+                            "This strategy buys when MACD crosses below the signal line and sells when MACD crosses above the signal line.")
+
+    def _init_(self, *args, **kwargs):
+        super()._init_(*args, **kwargs)
 
     def init(self):
         price = self.data.Close
