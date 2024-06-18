@@ -1,0 +1,8 @@
+Backtesting
+binance-futures-connector
+pandas
+python-binance
+ta
+ccxt
+flask
+flask_cors
