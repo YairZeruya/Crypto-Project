@@ -1,5 +1,4 @@
 ﻿# Crypto-Project
-# Todo List App
 ## Setup
 
 **1. Clone the repository to your local machine using the following command:**
