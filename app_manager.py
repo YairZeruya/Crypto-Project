@@ -1,3 +1,4 @@
+
 # app_manager.py
 from datetime import datetime
 import ccxt
