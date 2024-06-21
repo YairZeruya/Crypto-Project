@@ -6,3 +6,4 @@ ta
 ccxt
 flask
 flask_cors
+requests

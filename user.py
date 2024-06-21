@@ -7,4 +7,4 @@ class User:
         _next_id += 1
         self.money : int = 1000
         self.trades : list = []
-        self.total_profit : double = 0.0
+        self.total_profit : float = 0.0

@@ -1,19 +1,32 @@
 from enums import TradeStatus
 
 class Trade:
-    _next_id : int = 0
+    _next_id: int = 0
 
-    def init(self,symbol,duration,cost,start_time,user_id):
-        self.id : int = Trade._next_id
-        _next_id += 1
-
-        self.symbol : str = symbol
-        self.duration : str = duration
-        self.cost : str = cost
-        self.start_time : str = start_time
-        self.user_id : int = user_id
+    def __init__(self, symbol: str, cost: int, start_time: str, bot_name: str, start_price: str):
+        print("Initializing Trade object")
+        self.id: int = Trade._next_id
+        Trade._next_id += 1
         
-        self.profit : str = 0.0
-        self.end_time : str = None
-        self.status : int = TradeStatus.open.value
+        self.bot_name: str = bot_name
+        self.symbol: str = symbol
+        self.cost: int = cost
+        self.start_time: str = start_time
+        self.start_price : str = start_price
+        self.profit: str = 0.0
+        self.end_time: str = None
+        self.status: int = TradeStatus.open.value
+        print("Trade object initialized successfully")
 
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "bot_name": self.bot_name,
+            "symbol": self.symbol,
+            "cost": self.cost,
+            "start_time": self.start_time,
+            "profit": self.profit,
+            "end_time": self.end_time,
+            "status": self.status,
+            "start_price" : self.start_price
+        }

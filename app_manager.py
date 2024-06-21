@@ -6,11 +6,14 @@ from binance.client import Client
 from strategy import RSI_Strategy, EMA_Strategy, MACD_Strategy
 from backtesting import Backtest
 from helper import klines_extended
+from trade import Trade
+from db import DB
+import requests
 
 
 class AppManager:
 
-    def __init__(self):
+    def __init__(self,db_name):
         self.api_key = 'b7K72xGGe7uB1ZPQxjsfTZ6keY3kuZAkGI73RKylAB1qDcStuezY40VajCovytvP'
         self.api_secret = 'TQZkqjPRuQZUquOH8DwUN3D9MPC959IM7XapJpKDUv7YFIGkH8tBp0jgt5cMmBEK'
         self.exchange = ccxt.binance()
@@ -19,6 +22,8 @@ class AppManager:
             "EMA_Strategy": {"class": EMA_Strategy, "description": EMA_Strategy.description},
             "MACD_Strategy": {"class": MACD_Strategy, "description": MACD_Strategy.description}
         }
+        self.trades : list = []
+        self.db = DB(db_name)
 
     def get_coins_binance(self):
         client = Client(self.api_key, self.api_secret, tld="com", testnet=True)
@@ -100,4 +105,38 @@ class AppManager:
 
             return results
         except Exception as e:
+            raise e
+    
+
+    def create_trade(self, symbol: str, cost: int, start_time: str, bot_name: str) -> Trade:
+        try:
+            print("Creating trade with:", symbol, cost, start_time, bot_name)
+            start_price = self.get_start_price_from_binance(symbol)  # Fetch start price from Binance
+            new_trade = Trade(symbol, cost, start_time, bot_name, start_price)
+            self.db.save_trade(new_trade, start_price)  # Save trade to database
+            print("Trade created successfully")
+            return new_trade
+        except Exception as e:
+            print(f"Error creating trade: {e}")
+            raise e
+
+    def get_start_price_from_binance(self, symbol):
+        url = f"https://api.binance.com/api/v3/ticker/price?symbol={symbol}"
+        response = requests.get(url)
+        if response.status_code == 200:
+            data = response.json()
+            start_price = float(data['price'])
+            return start_price
+        else:
+            raise ValueError(f"Failed to fetch start price for {symbol} from Binance API")
+        
+    def get_trade_by_id(self, trade_id):
+        try:
+            trade_data = self.db.get_trade_by_id(trade_id)
+            if trade_data:
+                return Trade(trade_data["symbol"], trade_data["cost"], trade_data["start_time"], trade_data["strategy"], trade_data["start_price"])
+            else:
+                return None
+        except Exception as e:
+            print(f"Error fetching trade by ID: {e}")
             raise e
