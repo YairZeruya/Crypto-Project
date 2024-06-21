@@ -7,3 +7,4 @@ ccxt
 flask
 flask_cors
 requests
+pytest
