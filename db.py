@@ -43,6 +43,20 @@ class DB:
         conn.commit()
         print("Trade saved successfully")
 
+    def update_trade(self, trade_id, end_price, end_time, return_value):
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        print(trade_id,end_price,end_time,return_value)
+        cursor.execute('''
+                UPDATE trades 
+                SET end_price=?, end_time=?, "return"=?
+                WHERE id=?
+            ''', (end_price, end_time, return_value, trade_id))
+        conn.commit()
+        print(f"Trade with ID {trade_id} updated successfully")
+        print(f'updated trade from db: {DB.get_trade_by_id(self,trade_id=trade_id)}')
+
+
     def get_trade_by_id(self, trade_id):
         conn = self.get_connection()
         cursor = conn.cursor()
@@ -64,8 +78,6 @@ class DB:
             }
         else:
             return None
-
-    # Implement other methods as needed: update_trade, delete_trade, etc.
 
     def close_connection(self):
         if hasattr(self.local, 'conn'):

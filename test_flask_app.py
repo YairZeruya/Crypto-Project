@@ -43,7 +43,7 @@ def test_create_trade(api_url):
     data = {
         "symbol": "BTCUSDT",
         "cost": 1000,
-        "start_time": "2023-01-01",
+        "start_time": "2023-01-01T17:20",
         "bot_name": "TestBot"
     }
     response = requests.post(f'{api_url}/trade/buy', json=data)
