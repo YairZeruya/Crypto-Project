@@ -182,3 +182,9 @@ class AppManager:
         else:
             raise ValueError(f"Trade with ID {trade_id} not found")
 
+    def get_all_trades(self):
+        try:
+            return self.db.get_all_trades()
+        except Exception as e:
+            print(f"Error fetching all trades: {e}")
+            raise e

@@ -131,6 +131,15 @@ def sell_trade(trade_id):
     except Exception as e:
         logging.error(f"An error occurred in sell_trade endpoint: {str(e)}")
         return jsonify({"error": str(e)}), 500
+    
+@app.route('/trades', methods=['GET'])
+def get_all_trades():
+    try:
+        trades = app_manager.get_all_trades()
+        return jsonify([trade for trade in trades]), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 
 @app.route('/')
 def hello():

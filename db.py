@@ -83,3 +83,24 @@ class DB:
         if hasattr(self.local, 'conn'):
             self.local.conn.close()
             del self.local.conn
+            
+    def get_all_trades(self):
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        cursor.execute('''
+            SELECT * FROM trades
+        ''')
+        trades = cursor.fetchall()
+        return [
+            {
+                "id": trade[0],
+                "symbol": trade[1],
+                "strategy": trade[2],
+                "start_time": trade[3],
+                "end_time": trade[4],
+                "cost": trade[5],
+                "start_price": trade[6],
+                "end_price": trade[7],
+                "return": trade[8]
+            } for trade in trades
+        ]
