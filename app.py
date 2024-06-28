@@ -77,16 +77,6 @@ def buy():
         return jsonify({"error": str(ve)}), 400
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-    
-
-# @app.route('/trade/<int:trade_id>', methods=['GET', 'PUT'])
-# def get_trade_by_id(trade_id):
-#     if request.method == 'GET':
-#         trade = app_manager.get_trade_by_id(trade_id)
-#         if trade:
-#             return jsonify(trade.to_dict()), 200
-#         else:
-#             return jsonify({"error": f"Trade with ID {trade_id} not found"}), 404
         
     
 @app.route('/trade/<int:trade_id>', methods=['GET', 'PUT'])
@@ -114,7 +104,7 @@ def get_trade_by_id(trade_id):
             print(f"Updated trade: {updated_trade.to_dict()}")
             return jsonify(updated_trade.to_dict()), 200
         except ValueError as ve:
-            return jsonify({"error": str(ve)}), 404  # Adjust status code as needed
+            return jsonify({"error": str(ve)}), 404
         except Exception as e:
             logging.error(f"An error occurred in update trade endpoint: {str(e)}")
             return jsonify({"error": str(e)}), 500
@@ -127,7 +117,7 @@ def sell_trade(trade_id):
         updated_trade = app_manager.sell_trade(trade_id, end_time)
         return jsonify(updated_trade.to_dict()), 200
     except ValueError as ve:
-        return jsonify({"error": str(ve)}), 404  # Adjust status code as needed
+        return jsonify({"error": str(ve)}), 404
     except Exception as e:
         logging.error(f"An error occurred in sell_trade endpoint: {str(e)}")
         return jsonify({"error": str(e)}), 500
@@ -140,10 +130,6 @@ def get_all_trades():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-
-@app.route('/')
-def hello():
-    return 'Hello, World!'
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=5586, debug=True)

@@ -28,21 +28,6 @@ class Trade:
         trade_id = cls.generate_id()
         return cls(trade_id, symbol, cost, start_time, bot_name, start_price)
 
-    # @staticmethod
-    # def get_trade_by_id(trade_id: int, db):
-    #     trade_data = db.get_trade_by_id(trade_id)
-    #     if trade_data:
-    #         return Trade(
-    #             trade_data["id"],
-    #             trade_data["symbol"],
-    #             trade_data["cost"],
-    #             trade_data["start_time"],
-    #             trade_data["strategy"],
-    #             trade_data["start_price"]
-    #         )
-    #     else:
-    #         return None
-
     def to_dict(self):
         return {
             "id": self.id,

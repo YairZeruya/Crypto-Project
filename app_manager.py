@@ -31,15 +31,15 @@ class AppManager:
 
     def get_coin_data(self, coin, timeframe):
         symbol = f"{coin.upper()}/USDT"
-        end_date = self.exchange.milliseconds()  # current timestamp in milliseconds
+        end_date = self.exchange.milliseconds()
 
         # Define the start date based on the timeframe
         if timeframe == '1d':
-            start_date = end_date - 365 * 24 * 60 * 60 * 1000  # One year
+            start_date = end_date - 365 * 24 * 60 * 60 * 1000 
         elif timeframe == '1w':
-            start_date = end_date - 365 * 24 * 60 * 60 * 1000  # One year
+            start_date = end_date - 365 * 24 * 60 * 60 * 1000 
         elif timeframe == '1M':
-            start_date = end_date - 5 * 365 * 24 * 60 * 60 * 1000  # Five years
+            start_date = end_date - 5 * 365 * 24 * 60 * 60 * 1000
         else:
             raise ValueError("Invalid timeframe provided")
 
@@ -79,9 +79,6 @@ class AppManager:
                 "HBARUSDT", "ENJUSDT", "CHZUSDT", "BATUSDT", "ZRXUSDT", "SNXUSDT", "LUNAUSDT", "NEOUSDT", "ATOMUSDT", "ICPUSDT",
                 "HNTUSDT", "YFIUSDT", "1INCHUSDT", "GRTUSDT", "MKRUSDT", "UMAUSDT", "CELUSDT", "QTUMUSDT", "OMGUSDT", "FETUSDT"
             ]
-
-            tp = 0.03
-            sl = 0.02
 
             results = []
             for symbol in symbols:
@@ -133,37 +130,24 @@ class AppManager:
 
     @staticmethod
     def calc_interval_from_dates(datetime_str1: str, datetime_str2: str):
-        # Define the datetime format
         datetime_format = "%Y-%m-%dT%H:%M"
 
         # Parse the datetime strings into datetime objects
         datetime_obj1 = datetime.strptime(datetime_str1, datetime_format)
         datetime_obj2 = datetime.strptime(datetime_str2, datetime_format)
 
-        # Calculate the difference between the two datetime objects
         difference = datetime_obj2 - datetime_obj1
-        # Extract the number of days from the difference
         number_of_days = difference.days
-
         return number_of_days
 
     def sell_trade(self, trade_id, end_time):
         trade = self.db.get_trade_by_id(trade_id)
         if trade:
-            end_price = self.get_start_price_from_binance(trade.get('symbol'))
-            print(f"End Price: {end_price}")
-            
-            start_time = trade.get('start_time')
-            print(f"Start Time: {start_time}")
-            
+            end_price = self.get_start_price_from_binance(trade.get('symbol'))            
+            start_time = trade.get('start_time')            
             return_value = AppManager.calc_interval_from_dates(start_time, end_time)
-            print(f"Return Value: {return_value}")
-            
-            print(f"Updating trade ID {trade_id} with end price {end_price}, end time {end_time}, return value {return_value}")
             self.db.update_trade(trade_id, end_price, end_time, return_value)
-            
             updated_trade = self.db.get_trade_by_id(trade_id)
-            print(f"Updated Trade: {updated_trade}")
             
             create_treade = Trade(
                 updated_trade.get('id'),

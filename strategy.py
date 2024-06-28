@@ -31,7 +31,6 @@ class RSI_Strategy(Strategy):
         super().__init__(*args, **kwargs)
 
     def init(self):
-        price = self.data.Close
         self.rsi = self.I(rsi, self.data.Close, self.rsi_period)
 
     def next(self):
@@ -52,7 +51,6 @@ class EMA_Strategy(Strategy):
         super().__init__(*args, **kwargs)
 
     def init(self):
-        price = self.data.Close
         self.ema = self.I(ema, self.data.Close, self.ema_period)
 
     def next(self):
@@ -75,7 +73,6 @@ class MACD_Strategy(Strategy):
         super().__init__(*args, **kwargs)
 
     def init(self):
-        price = self.data.Close
         self.macd, self.signal = self.I(macd, self.data.Close, self.macd_fast_period, self.macd_slow_period, self.macd_signal_period)
 
     def next(self):
