@@ -129,6 +129,14 @@ def get_all_trades():
         return jsonify([trade for trade in trades]), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+        
+@app.route('/balance', methods=['GET'])
+def get_balance():
+    try:
+        balance = app_manager.get_current_balance()
+        return jsonify({"balance": balance}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 if __name__ == '__main__':

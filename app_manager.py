@@ -23,6 +23,7 @@ class AppManager:
         }
         self.trades: list = []
         self.db = DB(db_name)
+        self.balance = 1000  # Initial balance
 
     def get_coins_binance(self):
         client = Client(self.api_key, self.api_secret, tld="com", testnet=True)
@@ -33,7 +34,6 @@ class AppManager:
         symbol = f"{coin.upper()}/USDT"
         end_date = self.exchange.milliseconds()
 
-        # Define the start date based on the timeframe
         if timeframe == '1d':
             start_date = end_date - 365 * 24 * 60 * 60 * 1000 
         elif timeframe == '1w':
@@ -43,10 +43,8 @@ class AppManager:
         else:
             raise ValueError("Invalid timeframe provided")
 
-        # Fetch OHLCV (Open, High, Low, Close, Volume) data for the symbol and timeframe
         ohlcv = self.exchange.fetch_ohlcv(symbol, timeframe='1d', since=start_date, limit=None)
 
-        # Prepare the data to be returned
         historical_prices = []
         for data in ohlcv:
             timestamp = datetime.utcfromtimestamp(data[0] / 1000).strftime('%Y-%m-%d')
@@ -66,7 +64,6 @@ class AppManager:
 
     def run_backtest_all(self, strategy_name, timeframe='1h', interval=30):
         try:
-            # Validate the strategy
             if strategy_name not in self.strategy_mapping:
                 raise ValueError(f"Strategy '{strategy_name}' not found")
 
@@ -103,10 +100,14 @@ class AppManager:
             raise e
 
     def create_trade(self, symbol: str, cost: int, start_time: str, bot_name: str) -> Trade:
+        if self.balance < cost:
+            raise ValueError("Insufficient balance to create trade")
+        
         try:
-            start_price = self.get_start_price_from_binance(symbol)  # Fetch start price from Binance
+            start_price = self.get_start_price_from_binance(symbol)
             new_trade = Trade.create_trade(symbol, cost, start_time, bot_name, start_price)
-            self.db.save_trade(new_trade, start_price)  # Save trade to database
+            self.db.save_trade(new_trade, start_price)
+            self.balance -= cost  # Deduct cost from balance
             return new_trade
         except Exception as e:
             raise e
@@ -128,28 +129,31 @@ class AppManager:
             print(f"Error fetching trade by ID: {e}")
             raise e
 
-    @staticmethod
-    def calc_interval_from_dates(datetime_str1: str, datetime_str2: str):
-        datetime_format = "%Y-%m-%dT%H:%M"
+    # @staticmethod
+    # def calc_interval_from_dates(datetime_str1: str, datetime_str2: str):
+    #     datetime_format = "%Y-%m-%dT%H:%M"
 
-        # Parse the datetime strings into datetime objects
-        datetime_obj1 = datetime.strptime(datetime_str1, datetime_format)
-        datetime_obj2 = datetime.strptime(datetime_str2, datetime_format)
+    #     datetime_obj1 = datetime.strptime(datetime_str1, datetime_format)
+    #     datetime_obj2 = datetime.strptime(datetime_str2, datetime_format)
 
-        difference = datetime_obj2 - datetime_obj1
-        number_of_days = difference.days
-        return number_of_days
+    #     difference = datetime_obj2 - datetime_obj1
+    #     number_of_days = difference.days
+    #     return number_of_days
 
     def sell_trade(self, trade_id, end_time):
         trade = self.db.get_trade_by_id(trade_id)
         if trade:
-            end_price = self.get_start_price_from_binance(trade.get('symbol'))            
-            start_time = trade.get('start_time')            
-            return_value = AppManager.calc_interval_from_dates(start_time, end_time)
+            end_price = self.get_start_price_from_binance(trade.get('symbol'))
+            start_price = trade.get('start_price')
+            cost = trade.get('cost')
+
+            # Calculate return value
+            return_value = ((end_price - start_price) / start_price) * cost
+            
             self.db.update_trade(trade_id, end_price, end_time, return_value)
             updated_trade = self.db.get_trade_by_id(trade_id)
             
-            create_treade = Trade(
+            create_trade = Trade(
                 updated_trade.get('id'),
                 updated_trade.get('symbol'),
                 updated_trade.get('cost'),
@@ -157,14 +161,24 @@ class AppManager:
                 updated_trade.get('strategy'),
                 updated_trade.get('start_price'),
             )
-            create_treade.end_time = updated_trade.get('end_time')
-            create_treade.profit = updated_trade.get('return')
-            create_treade.status = TradeStatus.close.value
-            create_treade.end_price = updated_trade.get('end_price')
-            print(f'createdtrade : {create_treade.to_dict()}')
-            return create_treade
+            create_trade.end_time = updated_trade.get('end_time')
+            create_trade.profit = updated_trade.get('return')
+            create_trade.status = TradeStatus.close.value
+            create_trade.end_price = updated_trade.get('end_price')
+
+            # Update balance after selling the trade
+            self.update_balance(create_trade.profit + create_trade.cost)
+
+            print(f'createdtrade : {create_trade.to_dict()}')
+            return create_trade
         else:
             raise ValueError(f"Trade with ID {trade_id} not found")
+
+    def update_balance(self, amount):
+        self.balance += amount
+
+    def get_current_balance(self):
+        return self.balance
 
     def get_all_trades(self):
         try:
