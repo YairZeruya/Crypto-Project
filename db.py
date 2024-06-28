@@ -5,6 +5,9 @@ class DB:
     def __init__(self, db_name):
         self.db_name = db_name
         self.local = local()  # Thread-local storage for SQLite connection
+        self.create_trades_table()
+        self.create_balance_table()
+        self.initialize_balance()
 
     def get_connection(self):
         # Check if there's already a connection for this thread
@@ -12,6 +15,7 @@ class DB:
             # Create a new SQLite connection for this thread
             self.local.conn = sqlite3.connect(self.db_name)
             self.create_trades_table()  # Ensure trades table exists in this connection
+            self.create_balance_table()  # Ensure balance table exists in this connection
 
         return self.local.conn
 
@@ -33,6 +37,26 @@ class DB:
         ''')
         conn.commit()
 
+    def create_balance_table(self):
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS balance (
+                id INTEGER PRIMARY KEY,
+                amount REAL
+            )
+        ''')
+        conn.commit()
+
+    def initialize_balance(self):
+        # Initialize balance to 1000 if it's not already set
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        cursor.execute('''
+            INSERT OR IGNORE INTO balance (id, amount) VALUES (1, 1000)
+        ''')
+        conn.commit()
+
     def save_trade(self, trade, start_price):
         conn = self.get_connection()
         cursor = conn.cursor()
@@ -46,16 +70,13 @@ class DB:
     def update_trade(self, trade_id, end_price, end_time, return_value):
         conn = self.get_connection()
         cursor = conn.cursor()
-        print(trade_id,end_price,end_time,return_value)
         cursor.execute('''
-                UPDATE trades 
-                SET end_price=?, end_time=?, "return"=?
-                WHERE id=?
-            ''', (end_price, end_time, return_value, trade_id))
+            UPDATE trades 
+            SET end_price=?, end_time=?, "return"=?
+            WHERE id=?
+        ''', (end_price, end_time, return_value, trade_id))
         conn.commit()
         print(f"Trade with ID {trade_id} updated successfully")
-        print(f'updated trade from db: {DB.get_trade_by_id(self,trade_id=trade_id)}')
-
 
     def get_trade_by_id(self, trade_id):
         conn = self.get_connection()
@@ -79,11 +100,33 @@ class DB:
         else:
             return None
 
+    def save_balance(self, amount):
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        cursor.execute('''
+            UPDATE balance SET amount=?
+            WHERE id=1
+        ''', (amount,))
+        conn.commit()
+        print("Balance saved successfully")
+
+    def get_balance(self):
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        cursor.execute('''
+            SELECT amount FROM balance WHERE id=1
+        ''')
+        balance_data = cursor.fetchone()
+        if balance_data:
+            return balance_data[0]
+        else:
+            return None
+
     def close_connection(self):
         if hasattr(self.local, 'conn'):
             self.local.conn.close()
             del self.local.conn
-            
+
     def get_all_trades(self):
         conn = self.get_connection()
         cursor = conn.cursor()

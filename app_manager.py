@@ -1,4 +1,3 @@
-# app_manager.py
 from datetime import datetime
 import ccxt
 from binance.client import Client
@@ -23,7 +22,6 @@ class AppManager:
         }
         self.trades: list = []
         self.db = DB(db_name)
-        self.balance = 1000  # Initial balance
 
     def get_coins_binance(self):
         client = Client(self.api_key, self.api_secret, tld="com", testnet=True)
@@ -100,14 +98,14 @@ class AppManager:
             raise e
 
     def create_trade(self, symbol: str, cost: int, start_time: str, bot_name: str) -> Trade:
-        if self.balance < cost:
+        if self.get_current_balance() < cost:
             raise ValueError("Insufficient balance to create trade")
         
         try:
             start_price = self.get_start_price_from_binance(symbol)
             new_trade = Trade.create_trade(symbol, cost, start_time, bot_name, start_price)
             self.db.save_trade(new_trade, start_price)
-            self.balance -= cost  # Deduct cost from balance
+            self.update_balance(-cost)  # Deduct cost from balance
             return new_trade
         except Exception as e:
             raise e
@@ -128,17 +126,6 @@ class AppManager:
         except Exception as e:
             print(f"Error fetching trade by ID: {e}")
             raise e
-
-    # @staticmethod
-    # def calc_interval_from_dates(datetime_str1: str, datetime_str2: str):
-    #     datetime_format = "%Y-%m-%dT%H:%M"
-
-    #     datetime_obj1 = datetime.strptime(datetime_str1, datetime_format)
-    #     datetime_obj2 = datetime.strptime(datetime_str2, datetime_format)
-
-    #     difference = datetime_obj2 - datetime_obj1
-    #     number_of_days = difference.days
-    #     return number_of_days
 
     def sell_trade(self, trade_id, end_time):
         trade = self.db.get_trade_by_id(trade_id)
@@ -175,10 +162,12 @@ class AppManager:
             raise ValueError(f"Trade with ID {trade_id} not found")
 
     def update_balance(self, amount):
-        self.balance += amount
+        current_balance = self.db.get_balance()
+        updated_balance = current_balance + amount
+        self.db.save_balance(updated_balance)
 
     def get_current_balance(self):
-        return self.balance
+        return self.db.get_balance()
 
     def get_all_trades(self):
         try:
